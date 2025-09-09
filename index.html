@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wardrobe AI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: #000; 
+      color: #fff; 
+      overflow-x: hidden;
+    }
+    
+    /* Header */
+    .header { 
+      position: fixed; 
+      top: 0; 
+      width: 100%; 
+      height: 60px; 
+      background: rgba(0,0,0,0.9); 
+      backdrop-filter: blur(10px); 
+      z-index: 100; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      border-bottom: 1px solid #333;
+    }
+    .logo { font-size: 1.5rem; font-weight: 700; background: linear-gradient(45deg, #ff006e, #8338ec); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    
+    /* Main Content */
+    .main { padding-top: 60px; padding-bottom: 80px; min-height: 100vh; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Feed Styles */
+    .feed-container { max-width: 500px; margin: 0 auto; }
+    .post { 
+      background: #111; 
+      margin: 1rem 0; 
+      border-radius: 12px; 
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+    .post-header { 
+      display: flex; 
+      align-items: center; 
+      padding: 1rem; 
+      gap: 0.75rem; 
+    }
+    .avatar { 
+      width: 40px; 
+      height: 40px; 
+      border-radius: 50%; 
+      background: linear-gradient(45deg, #ff006e, #8338ec); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-weight: bold; 
+      color: white;
+    }
+    .post-user { font-weight: 600; }
+    .post-time { color: #888; font-size: 0.85rem; }
+    .post-outfit { 
+      padding: 0 1rem; 
+      font-size: 1.1rem; 
+      line-height: 1.4; 
+      margin-bottom: 1rem;
+    }
+    .post-image { 
+      height: 300px; 
+      background: linear-gradient(135deg, #667eea, #764ba2); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 4rem; 
+      margin: 0 1rem 1rem 1rem; 
+      border-radius: 8px;
+    }
+    .post-actions { 
+      display: flex; 
+      justify-content: space-between; 
+      padding: 0 1rem 1rem; 
+      align-items: center;
+    }
+    .action-buttons { display: flex; gap: 1rem; }
+    .action-btn { 
+      background: none; 
+      border: none; 
+      color: #fff; 
+      font-size: 1.2rem; 
+      cursor: pointer; 
+      transition: transform 0.1s;
+    }
+    .action-btn:hover { transform: scale(1.1); }
+    .action-btn.liked { color: #ff3040; }
+    .post-stats { color: #888; font-size: 0.85rem; }
+    
+    /* Bottom Navigation */
+    .bottom-nav { 
+      position: fixed; 
+      bottom: 0; 
+      width: 100%; 
+      height: 70px; 
+      background: rgba(0,0,0,0.95); 
+      backdrop-filter: blur(10px); 
+      display: flex; 
+      justify-content: space-around; 
+      align-items: center; 
+      border-top: 1px solid #333; 
+      z-index: 100;
+    }
+    .nav-item { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+      padding: 0.5rem;
+    }
+    .nav-item.active { color: #ff006e; }
+    .nav-icon { font-size: 1.4rem; margin-bottom: 0.25rem; }
+    .nav-label { font-size: 0.7rem; font-weight: 500; }
+    
+    /* Other Tab Styles */
+    .tab-container { padding: 1rem; max-width: 500px; margin: 0 auto; }
+    .card { 
+      background: #111; 
+      border-radius: 12px; 
+      padding: 1.5rem; 
+      margin: 1rem 0; 
+      border: 1px solid #333;
+    }
+    .form-row { 
+      display: flex; 
+      gap: 0.5rem; 
+      margin-bottom: 1rem; 
+      flex-wrap: wrap;
+    }
+    input, select { 
+      background: #222; 
+      border: 1px solid #444; 
+      color: #fff; 
+      padding: 0.75rem; 
+      border-radius: 8px; 
+      flex: 1; 
+      min-width: 120px;
+    }
+    input:focus, select:focus { 
+      outline: none; 
+      border-color: #ff006e; 
+      box-shadow: 0 0 0 2px rgba(255,0,110,0.2);
+    }
+    .btn { 
+      background: linear-gradient(45deg, #ff006e, #8338ec); 
+      border: none; 
+      color: white; 
+      padding: 0.75rem 1.5rem; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      transition: transform 0.1s;
+    }
+    .btn:hover { transform: scale(1.05); }
+    .btn.secondary { background: #333; }
+    
+    .wardrobe-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+      gap: 1rem;
+    }
+    .wardrobe-item { 
+      background: #111; 
+      border: 1px solid #333; 
+      border-radius: 8px; 
+      padding: 1rem; 
+      text-align: center;
+    }
+    .item-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .item-name { font-weight: 600; margin-bottom: 0.5rem; }
+    .item-details { font-size: 0.85rem; color: #888; }
+    
+    .ai-suggestion { 
+      background: linear-gradient(135deg, #ff006e, #8338ec); 
+      border-radius: 12px; 
+      padding: 2rem; 
+      text-align: center; 
+      margin: 1rem 0;
+    }
+    .suggestion-outfit { font-size: 1.2rem; margin: 1rem 0; }
+    .suggestion-tip { opacity: 0.9; font-size: 0.9rem; }
+    
+    .shop-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+      gap: 1rem;
+    }
+    .shop-item { 
+      background: #111; 
+      border: 1px solid #333; 
+      border-radius: 8px; 
+      padding: 1rem;
+    }
+    .shop-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .shop-name { font-weight: 600; margin-bottom: 0.25rem; }
+    .shop-price { color: #4ade80; font-weight: 600; }
+    .shop-store { color: #888; font-size: 0.85rem; }
+    
+    .empty-state { 
+      text-align: center; 
+      padding: 3rem 1rem; 
+      color: #666;
+    }
+    
+    @media (max-width: 768px) {
+      .form-row { flex-direction: column; }
+      .wardrobe-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">✨ WardrobeAI</div>
+  </header>
+
+  <main class="main">
+    <!-- Social Feed -->
+    <div id="social-tab" class="tab-content active">
+      <div class="feed-container">
+        <!-- Hardcoded Posts -->
+        <div class="post">
+          <div class="post-header">
+            <div class="avatar">A</div>
+            <div>
+              <div class="post-user">Alex Style</div>
+              <div class="post-time">2h ago</div>
+            </div>
+          </div>
+          <div class="post-image">👗✨</div>
+          <div class="post-outfit">Perfect summer dress with white sneakers for brunch! Feeling confident and comfy 💫</div>
+          <div class="post-actions">
+            <div class="action-buttons">
+              <button class="action-btn" onclick="likePost(this)">🤍</button>
+              <button class="action-btn" onclick="ratePost(this, 5)">⭐</button>
+              <button class="action-btn">💬</button>
+            </div>
+            <div class="post-stats">127 likes • 4.8⭐</div>
+          </div>
+        </div>
+
+        <div class="post">
+          <div class="post-header">
+            <div class="avatar">S</div>
+            <div>
+              <div class="post-user">Sarah Chic</div>
+              <div class="post-time">4h ago</div>
+            </div>
+          </div>
+          <div class="post-image">🧥👖</div>
+          <div class="post-outfit">Business casual vibes with this blazer and dark jeans combo. Ready for client meetings! 💼</div>
+          <div class="post-actions">
+            <div class="action-buttons">
+              <button class="action-btn" onclick="likePost(this)">🤍</button>
+              <button class="action-btn" onclick="ratePost(this, 5)">⭐</button>
+              <button class="action-btn">💬</button>
+            </div>
+            <div class="post-stats">89 likes • 4.6⭐</div>
+          </div>
+        </div>
+
+        <div class="post">
+          <div class="post-header">
+            <div class="avatar">M</div>
+            <div>
+              <div class="post-user">Mike Fresh</div>
+              <div class="post-time">6h ago</div>
+            </div>
+          </div>
+          <div class="post-image">👕👟</div>
+          <div class="post-outfit">Casual Friday look! Graphic tee with my favorite sneakers. Sometimes simple is best 😎</div>
+          <div class="post-actions">
+            <div class="action-buttons">
+              <button class="action-btn" onclick="likePost(this)">🤍</button>
+              <button class="action-btn" onclick="ratePost(this, 5)">⭐</button>
+              <button class="action-btn">💬</button>
+            </div>
+            <div class="post-stats">156 likes • 4.2⭐</div>
+          </div>
+        </div>
+
+        <div class="post">
+          <div class="post-header">
+            <div class="avatar">L</div>
+            <div>
+              <div class="post-user">Luna Fashion</div>
+              <div class="post-time">8h ago</div>
+            </div>
+          </div>
+          <div class="post-image">👚👠</div>
+          <div class="post-outfit">Date night outfit! Silk blouse with heels and statement earrings. Feeling elegant ✨</div>
+          <div class="post-actions">
+            <div class="action-buttons">
+              <button class="action-btn liked" onclick="likePost(this)">❤️</button>
+              <button class="action-btn" onclick="ratePost(this, 5)">⭐</button>
+              <button class="action-btn">💬</button>
+            </div>
+            <div class="post-stats">203 likes • 4.9⭐</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shop Tab -->
+    <div id="shop-tab" class="tab-content">
+      <div class="tab-container">
+        <div class="card">
+          <h2>🛍️ Shop Latest Styles</h2>
+          <div class="form-row">
+            <select id="shop-filter">
+              <option value="all">All Items</option>
+              <option value="top">Tops</option>
+              <option value="bottom">Bottoms</option>
+              <option value="shoes">Shoes</option>
+            </select>
+            <button class="btn">Filter</button>
+          </div>
+        </div>
+        
+        <div class="shop-grid">
+          <div class="shop-item">
+            <div class="shop-icon">👕</div>
+            <div class="shop-name">Classic White Tee</div>
+            <div class="shop-price">KES 1,200</div>
+            <div class="shop-store">Fashion Hub Nairobi</div>
+            <button class="btn" style="width: 100%; margin-top: 0.5rem;">Add to Wardrobe</button>
+          </div>
+          
+          <div class="shop-item">
+            <div class="shop-icon">👖</div>
+            <div class="shop-name">Blue Denim Jeans</div>
+            <div class="shop-price">KES 3,500</div>
+            <div class="shop-store">Denim Co.</div>
+            <button class="btn" style="width: 100%; margin-top: 0.5rem;">Add to Wardrobe</button>
+          </div>
+          
+          <div class="shop-item">
+            <div class="shop-icon">👟</div>
+            <div class="shop-name">White Sneakers</div>
+            <div class="shop-price">KES 5,200</div>
+            <div class="shop-store">Sneaker World</div>
+            <button class="btn" style="width: 100%; margin-top: 0.5rem;">Add to Wardrobe</button>
+          </div>
+          
+          <div class="shop-item">
+            <div class="shop-icon">👗</div>
+            <div class="shop-name">Summer Dress</div>
+            <div class="shop-price">KES 4,800</div>
+            <div class="shop-store">Elegant Styles</div>
+            <button class="btn" style="width: 100%; margin-top: 0.5rem;">Add to Wardrobe</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Recommendations -->
+    <div id="ai-tab" class="tab-content">
+      <div class="tab-container">
+        <div class="card">
+          <h2>🤖 AI Style Assistant</h2>
+          <div class="form-row">
+            <select id="occasion">
+              <option value="casual">😎 Casual</option>
+              <option value="work">💼 Work</option>
+              <option value="date">❤️ Date Night</option>
+              <option value="event">🎉 Special Event</option>
+            </select>
+            <input type="number" id="temperature" placeholder="Temp (°C)" />
+            <button class="btn" onclick="getAIRecommendation()">✨ Get Suggestion</button>
+          </div>
+        </div>
+        
+        <div id="ai-result">
+          <div class="ai-suggestion">
+            <h3>✨ Perfect Outfit for Today</h3>
+            <div class="suggestion-outfit">👕 White Cotton Tee + 👖 Dark Blue Jeans + 👟 White Sneakers</div>
+            <div class="suggestion-tip">💡 This combination is perfect for casual outings and comfortable all day!</div>
+            <button class="btn secondary" style="margin-top: 1rem;">Generate New Suggestion</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wardrobe Tab -->
+    <div id="wardrobe-tab" class="tab-content">
+      <div class="tab-container">
+        <div class="card">
+          <h2>👔 My Wardrobe</h2>
+          <div class="form-row">
+            <input id="item-name" placeholder="Item name" />
+            <select id="item-category">
+              <option value="top">👕 Top</option>
+              <option value="bottom">👖 Bottom</option>
+              <option value="dress">👗 Dress</option>
+              <option value="shoes">👟 Shoes</option>
+              <option value="outerwear">🧥 Jacket</option>
+            </select>
+            <button class="btn" onclick="addItem()">Add Item</button>
+          </div>
+        </div>
+        
+        <div class="wardrobe-grid" id="wardrobe-list">
+          <div class="wardrobe-item">
+            <div class="item-icon">👕</div>
+            <div class="item-name">White T-Shirt</div>
+            <div class="item-details">Casual • White</div>
+          </div>
+          
+          <div class="wardrobe-item">
+            <div class="item-icon">👖</div>
+            <div class="item-name">Blue Jeans</div>
+            <div class="item-details">Casual • Blue</div>
+          </div>
+          
+          <div class="wardrobe-item">
+            <div class="item-icon">👟</div>
+            <div class="item-name">White Sneakers</div>
+            <div class="item-details">Casual • White</div>
+          </div>
+          
+          <div class="wardrobe-item">
+            <div class="item-icon">👗</div>
+            <div class="item-name">Summer Dress</div>
+            <div class="item-details">Casual • Floral</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('social')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Feed</div>
+    </div>
+    <div class="nav-item" onclick="switchTab('shop')">
+      <div class="nav-icon">🛍️</div>
+      <div class="nav-label">Shop</div>
+    </div>
+    <div class="nav-item" onclick="switchTab('ai')">
+      <div class="nav-icon">🤖</div>
+      <div class="nav-label">AI Style</div>
+    </div>
+    <div class="nav-item" onclick="switchTab('wardrobe')">
+      <div class="nav-icon">👔</div>
+      <div class="nav-label">Wardrobe</div>
+    </div>
+  </nav>
+
+  <script>
+    // Tab switching
+    function switchTab(tabName) {
+      // Remove active from all tabs and nav items
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+      
+      // Add active to selected tab and nav
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+      event.target.closest('.nav-item').classList.add('active');
+    }
+
+    // Social interactions
+    function likePost(btn) {
+      if (btn.classList.contains('liked')) {
+        btn.innerHTML = '🤍';
+        btn.classList.remove('liked');
+      } else {
+        btn.innerHTML = '❤️';
+        btn.classList.add('liked');
+      }
+    }
+
+    function ratePost(btn, stars) {
+      btn.style.color = '#fbbf24';
+      setTimeout(() => btn.style.color = '', 1000);
+    }
+
+    // AI Recommendations
+    function getAIRecommendation() {
+      const occasion = document.getElementById('occasion').value;
+      const temp = document.getElementById('temperature').value;
+      
+      const suggestions = {
+        casual: "👕 Graphic Tee + 🩳 Shorts + 👟 Sneakers",
+        work: "👔 Button Shirt + 👖 Chinos + 👞 Dress Shoes", 
+        date: "👗 Nice Dress + 👠 Heels + ✨ Accessories",
+        event: "🤵 Suit + 👞 Formal Shoes + 🎩 Hat"
+      };
+      
+      const tips = [
+        "Choose colors that complement your skin tone",
+        "Layer for unpredictable weather", 
+        "Comfort is key for confidence",
+        "Don't forget accessories to complete the look"
+      ];
+      
+      document.getElementById('ai-result').innerHTML = `
+        <div class="ai-suggestion">
+          <h3>✨ Perfect Outfit for ${occasion.charAt(0).toUpperCase() + occasion.slice(1)}</h3>
+          <div class="suggestion-outfit">${suggestions[occasion]}</div>
+          <div class="suggestion-tip">💡 ${tips[Math.floor(Math.random() * tips.length)]}</div>
+          <button class="btn secondary" onclick="getAIRecommendation()" style="margin-top: 1rem;">Generate New Suggestion</button>
+        </div>
+      `;
+    }
+
+    // Add wardrobe item
+    function addItem() {
+      const name = document.getElementById('item-name').value;
+      const category = document.getElementById('item-category').value;
+      
+      if (!name) {
+        alert('Please enter an item name');
+        return;
+      }
+      
+      const icons = {
+        top: '👕',
+        bottom: '👖', 
+        dress: '👗',
+        shoes: '👟',
+        outerwear: '🧥'
+      };
+      
+      const wardrobeList = document.getElementById('wardrobe-list');
+      const newItem = document.createElement('div');
+      newItem.className = 'wardrobe-item';
+      newItem.innerHTML = `
+        <div class="item-icon">${icons[category]}</div>
+        <div class="item-name">${name}</div>
+        <div class="item-details">${category} • New</div>
+      `;
+      
+      wardrobeList.appendChild(newItem);
+      document.getElementById('item-name').value = '';
+      
+      // Simple animation
+      newItem.style.opacity = '0';
+      newItem.style.transform = 'scale(0.8)';
+      setTimeout(() => {
+        newItem.style.transition = 'all 0.3s ease';
+        newItem.style.opacity = '1';
+        newItem.style.transform = 'scale(1)';
+      }, 100);
+    }
+  </script>
+</body>
+</html>
