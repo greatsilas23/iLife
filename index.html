@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wardrobe AI - Enhanced</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      background: #000; 
+      color: #fff; 
+      overflow-x: hidden;
+    }
+    
+    /* Login Screen */
+    .login-screen { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      padding: 2rem; 
+      background: linear-gradient(135deg, #667eea, #764ba2);
+    }
+    .login-card { 
+      background: rgba(0,0,0,0.8); 
+      padding: 2rem; 
+      border-radius: 20px; 
+      width: 100%; 
+      max-width: 400px; 
+      backdrop-filter: blur(10px); 
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .login-logo { 
+      text-align: center; 
+      font-size: 3rem; 
+      margin-bottom: 1rem; 
+      background: linear-gradient(45deg, #ff006e, #8338ec); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+    }
+    .login-title { 
+      text-align: center; 
+      font-size: 1.5rem; 
+      margin-bottom: 2rem; 
+      font-weight: 600;
+    }
+    .login-input { 
+      width: 100%; 
+      padding: 1rem; 
+      margin-bottom: 1rem; 
+      background: rgba(255,255,255,0.1); 
+      border: 1px solid rgba(255,255,255,0.2); 
+      border-radius: 12px; 
+      color: white; 
+      font-size: 1rem;
+    }
+    .login-input::placeholder { color: rgba(255,255,255,0.7); }
+    .login-input:focus { 
+      outline: none; 
+      border-color: #ff006e; 
+      box-shadow: 0 0 0 2px rgba(255,0,110,0.2);
+    }
+    .login-btn { 
+      width: 100%; 
+      padding: 1rem; 
+      background: linear-gradient(45deg, #ff006e, #8338ec); 
+      border: none; 
+      border-radius: 12px; 
+      color: white; 
+      font-size: 1rem; 
+      font-weight: 600; 
+      cursor: pointer; 
+      transition: transform 0.2s;
+    }
+    .login-btn:hover { transform: scale(1.02); }
+    
+    /* Main App */
+    .app { display: none; }
+    .app.active { display: block; }
+    
+    /* Header */
+    .header { 
+      position: fixed; 
+      top: 0; 
+      width: 100%; 
+      height: 60px; 
+      background: rgba(0,0,0,0.9); 
+      backdrop-filter: blur(10px); 
+      z-index: 100; 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      padding: 0 1rem;
+      border-bottom: 1px solid #333;
+    }
+    .logo { 
+      font-size: 1.2rem; 
+      font-weight: 700; 
+      background: linear-gradient(45deg, #ff006e, #8338ec); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+    }
+    .user-info { 
+      display: flex; 
+      align-items: center; 
+      gap: 0.5rem; 
+      font-size: 0.9rem;
+    }
+    .logout-btn { 
+      background: #333; 
+      border: none; 
+      color: white; 
+      padding: 0.5rem 1rem; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 0.8rem;
+    }
+    
+    /* Main Content */
+    .main { padding-top: 60px; padding-bottom: 80px; min-height: 100vh; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Explore Feed Styles */
+    .feed-container { max-width: 500px; margin: 0 auto; padding: 1rem; }
+    .post { 
+      background: #111; 
+      margin: 1rem 0; 
+      border-radius: 12px; 
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+    .post-header { 
+      display: flex; 
+      align-items: center; 
+      padding: 1rem; 
+      gap: 0.75rem; 
+    }
+    .avatar { 
+      width: 40px; 
+      height: 40px; 
+      border-radius: 50%; 
+      background: linear-gradient(45deg, #ff006e, #8338ec); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-weight: bold; 
+      color: white;
+    }
+    .post-user { font-weight: 600; }
+    .post-time { color: #888; font-size: 0.85rem; }
+    .post-outfit { 
+      padding: 0 1rem; 
+      font-size: 1.1rem; 
+      line-height: 1.4; 
+      margin-bottom: 1rem;
+    }
+    
+    /* Image Upload Styles */
+    .post-image-container { 
+      position: relative;
+      height: 300px; 
+      margin: 0 1rem 1rem 1rem; 
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .post-image { 
+      width: 100%;
+      height: 100%; 
+      object-fit: cover;
+      background: linear-gradient(135deg, #667eea, #764ba2); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 4rem; 
+    }
+    .upload-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+    .upload-overlay:hover { opacity: 0.9; }
+    .upload-text { margin-top: 1rem; font-size: 1rem; }
+    
+    .post-actions { 
+      display: flex; 
+      justify-content: space-between; 
+      padding: 0 1rem 1rem; 
+      align-items: center;
+    }
+    .action-buttons { display: flex; gap: 1rem; }
+    .action-btn { 
+      background: none; 
+      border: none; 
+      color: #fff; 
+      font-size: 1.2rem; 
+      cursor: pointer; 
+      transition: transform 0.1s;
+    }
+    .action-btn:hover { transform: scale(1.1); }
+    .action-btn.rated { color: #fbbf24; }
+    .post-stats { color: #888; font-size: 0.85rem; }
+    
+    /* Create Post */
+    .create-post { 
+      background: #111; 
+      border-radius: 12px; 
+      padding: 1rem; 
+      margin: 1rem 0; 
+      border: 1px solid #333;
+    }
+    .post-input { 
+      width: 100%; 
+      background: transparent; 
+      border: none; 
+      color: white; 
+      padding: 0.5rem 0; 
+      font-size: 1rem; 
+      resize: none;
+    }
+    .post-input:focus { outline: none; }
+    .image-upload {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1rem 0;
+      padding: 1rem;
+      border: 2px dashed #444;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.3s;
+    }
+    .image-upload:hover { border-color: #ff006e; }
+    .image-upload input[type="file"] { display: none; }
+    .post-btn { 
+      background: linear-gradient(45deg, #ff006e, #8338ec); 
+      border: none; 
+      color: white; 
+      padding: 0.5rem 1rem; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 0.9rem; 
+      margin-top: 0.5rem;
+    }
+    
+    /* Community Section */
+    .community-container { max-width: 600px; margin: 0 auto; padding: 1rem; }
+    .community-header {
+      background: linear-gradient(45deg, #ff006e, #8338ec);
+      padding: 2rem;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .community-tabs {
+      display: flex;
+      background: #111;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    .community-tab {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .community-tab.active { background: #ff006e; }
+    .discussion-thread {
+      background: #111;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #333;
+    }
+    .thread-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .thread-meta { color: #888; font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .thread-preview { line-height: 1.4; }
+    .create-thread {
+      background: #111;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border: 1px solid #333;
+    }
+    
+    /* Map Styles */
+    .map-container {
+      max-width: 100%;
+      padding: 1rem;
+    }
+    .map-header {
+      background: #111;
+      padding: 1.5rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .map-view {
+      height: 400px;
+      background: #222;
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+    .map-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #888;
+    }
+    .user-marker {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(45deg, #ff006e, #8338ec);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+      font-size: 0.8rem;
+    }
+    .user-marker:hover { transform: scale(1.2); }
+    .marker-popup {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.9);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    
+    /* Bottom Navigation */
+    .bottom-nav { 
+      position: fixed; 
+      bottom: 0; 
+      width: 100%; 
+      height: 70px; 
+      background: rgba(0,0,0,0.95); 
+      backdrop-filter: blur(10px); 
+      display: flex; 
+      justify-content: space-around; 
+      align-items: center; 
+      border-top: 1px solid #333; 
+      z-index: 100;
+    }
+    .nav-item { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+      padding: 0.5rem;
+    }
+    .nav-item.active { color: #ff006e; }
+    .nav-icon { font-size: 1.4rem; margin-bottom: 0.25rem; }
+    .nav-label { font-size: 0.7rem; font-weight: 500; }
+    
+    /* Other Tab Styles */
+    .tab-container { padding: 1rem; max-width: 500px; margin: 0 auto; }
+    .card { 
+      background: #111; 
+      border-radius: 12px; 
+      padding: 1.5rem; 
+      margin: 1rem 0; 
+      border: 1px solid #333;
+    }
+    .card h2 { margin-bottom: 1rem; }
+    .form-row { 
+      display: flex; 
+      gap: 0.5rem; 
+      margin-bottom: 1rem; 
+      flex-wrap: wrap;
+    }
+    input, select, textarea { 
+      background: #222; 
+      border: 1px solid #444; 
+      color: #fff; 
+      padding: 0.75rem; 
+      border-radius: 8px; 
+      flex: 1; 
+      min-width: 120px;
+    }
+    input:focus, select:focus, textarea:focus { 
+      outline: none; 
+      border-color: #ff006e; 
+      box-shadow: 0 0 0 2px rgba(255,0,110,0.2);
+    }
+    .btn { 
+      background: linear-gradient(45deg, #ff006e, #8338ec); 
+      border: none; 
+      color: white; 
+      padding: 0.75rem 1.5rem; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      transition: transform 0.1s;
+    }
+    .btn:hover { transform: scale(1.05); }
+    .btn.secondary { background: #333; }
+    .btn.small { padding: 0.5rem 1rem; font-size: 0.85rem; }
+    
+    .wardrobe-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+      gap: 1rem;
+    }
+    .wardrobe-item { 
+      background: #111; 
+      border: 1px solid #333; 
+      border-radius: 8px; 
+      padding: 1rem; 
+      text-align: center;
+    }
+    .item-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .item-name { font-weight: 600; margin-bottom: 0.5rem; }
+    .item-details { font-size: 0.85rem; color: #888; margin-bottom: 0.5rem; }
+    
+    .ai-suggestion { 
+      background: linear-gradient(135deg, #ff006e, #8338ec); 
+      border-radius: 12px; 
+      padding: 2rem; 
+      text-align: center; 
+      margin: 1rem 0;
+    }
+    .suggestion-outfit { font-size: 1.2rem; margin: 1rem 0; }
+    .suggestion-tip { opacity: 0.9; font-size: 0.9rem; }
+    
+    /* Shop Categories */
+    .shop-categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .category-card {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .category-card:hover {
+      border-color: #ff006e;
+      transform: translateY(-2px);
+    }
+    .category-card.active { border-color: #ff006e; background: rgba(255,0,110,0.1); }
+    .category-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .category-name { font-weight: 600; }
+    
+    /* African Heritage Categories */
+    .heritage-section {
+      background: linear-gradient(135deg, #d4af37, #ffd700);
+      color: #000;
+      padding: 2rem;
+      border-radius: 12px;
+      margin: 2rem 0;
+      text-align: center;
+    }
+    .heritage-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; }
+    .heritage-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .heritage-item {
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .heritage-item:hover { transform: scale(1.05); }
+    .heritage-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    
+    .shop-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+      gap: 1rem;
+    }
+    .shop-item { 
+      background: #111; 
+      border: 1px solid #333; 
+      border-radius: 8px; 
+      padding: 1rem;
+    }
+    .shop-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .shop-name { font-weight: 600; margin-bottom: 0.25rem; }
+    .shop-price { color: #4ade80; font-weight: 600; }
+    .shop-store { color: #888; font-size: 0.85rem; }
+    
+    .notification { 
+      position: fixed; 
+      top: 80px; 
+      right: 20px; 
+      background: #10b981; 
+      color: white; 
+      padding: 0.75rem 1rem; 
+      border-radius: 8px; 
+      z-index: 1000; 
+      transform: translateX(400px); 
+      transition: transform 0.3s ease;
+    }
+    .notification.show { transform: translateX(0); }
+    .notification.error { background: #ef4444; }
+    
+    .empty-state { 
+      text-align: center; 
+      padding: 3rem 1rem; 
+      color: #666;
+    }
+    
+    @media (max-width: 768px) {
+      .form-row { flex-direction: column; }
+      .wardrobe-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+      .shop-categories { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+      .heritage-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">✨👔</div>
+      <h1 class="login-title">WardrobeAI</h1>
+      <input type="text" id="username" class="login-input" placeholder="Enter your name" />
+      <select id="user-location" class="login-input">
+        <option value="Nairobi">📍 Nairobi</option>
+        <option value="Mombasa">📍 Mombasa</option>
+        <option value="Kisumu">📍 Kisumu</option>
+        <option value="Nakuru">📍 Nakuru</option>
+        <option value="Eldoret">📍 Eldoret</option>
+      </select>
+      <button class="login-btn" onclick="login()">Start Styling ✨</button>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" class="app">
+    <header class="header">
+      <div class="logo">✨ WardrobeAI</div>
+      <div class="user-info">
+        <span id="current-user">👤 User</span>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- Explore Tab -->
+      <div id="explore-tab" class="tab-content active">
+        <div class="feed-container">
+          <div class="create-post">
+            <textarea id="outfit-input" class="post-input" placeholder="Share your outfit today..."></textarea>
+            <label class="image-upload" for="image-upload-input">
+              <input type="file" id="image-upload-input" accept="image/*" onchange="handleImageUpload(event)">
+              📷 Add Photo
+            </label>
+            <canvas id="image-canvas" style="display:none;"></canvas>
+            <button class="post-btn" onclick="createPost()">Share Outfit</button>
+          </div>
+          <div id="posts-container"></div>
+        </div>
+      </div>
+
+      <!-- Community Tab -->
+      <div id="community-tab" class="tab-content">
+        <div class="community-container">
+          <div class="community-header">
+            <h1>Fashion Community Hub</h1>
+            <p>Connect, discuss, and share fashion insights with fellow style enthusiasts</p>
+          </div>
+          
+          <div class="community-tabs">
+            <div class="community-tab active" onclick="switchCommunityTab('discussions')">Discussions</div>
+            <div class="community-tab" onclick="switchCommunityTab('styling-tips')">Styling Tips</div>
+            <div class="community-tab" onclick="switchCommunityTab('challenges')">Challenges</div>
+          </div>
+
+          <div class="create-thread">
+            <h3>Start a Discussion</h3>
+            <input type="text" id="thread-title" placeholder="Thread title..." style="width: 100%; margin: 1rem 0;">
+            <textarea id="thread-content" placeholder="What's on your mind?" style="width: 100%; height: 100px; margin-bottom: 1rem;"></textarea>
+            <button class="btn" onclick="createThread()">Post Discussion</button>
+          </div>
+
+          <div id="community-content">
+            <div class="discussion-thread">
+              <div class="thread-title">Best Styling Tips for Kenyan Weather</div>
+              <div class="thread-meta">Posted by @StyleGuru_KE • 2 hours ago • 🌟 45 replies</div>
+              <div class="thread-preview">Living in Kenya means dealing with diverse weather patterns. Here are my top tips for staying stylish while comfortable...</div>
+            </div>
+            
+            <div class="discussion-thread">
+              <div class="thread-title">Where to Find Authentic Kente in Nairobi?</div>
+              <div class="thread-meta">Posted by @AfricanPride • 5 hours ago • 🌟 28 replies</div>
+              <div class="thread-preview">Looking for quality Kente fabric and accessories. Any recommendations for authentic shops?</div>
+            </div>
+            
+            <div class="discussion-thread">
+              <div class="thread-title">Color Coordination Challenge - Week 3</div>
+              <div class="thread-meta">Posted by @ColorMaster • 1 day ago • 🌟 67 replies</div>
+              <div class="thread-preview">This week's challenge: Create an outfit using only earth tones. Show us your creativity!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shop Tab -->
+      <div id="shop-tab" class="tab-content">
+        <div class="tab-container">
+          <div class="card">
+            <h2>🛍️ Fashion Marketplace</h2>
+            <div class="form-row">
+              <input type="text" id="search-input" placeholder="Search for items...">
+              <button class="btn" onclick="searchShop()">Search</button>
+            </div>
+          </div>
+
+          <div class="heritage-section">
+            <div class="heritage-title">🌍 African Heritage Collection</div>
+            <p>Celebrate your roots with authentic African fashion</p>
+            <div class="heritage-grid">
+              <div class="heritage-item" onclick="filterShop('kente')">
+                <div class="heritage-icon">🟨🟫</div>
+                <div>Kente Accessories</div>
+              </div>
+              <div class="heritage-item" onclick="filterShop('dashiki')">
+                <div class="heritage-icon">👔</div>
+                <div>Modern Dashiki</div>
+              </div>
+              <div class="heritage-item" onclick="filterShop('ankara')">
+                <div class="heritage-icon">🧥</div>
+                <div>Ankara Blazers</div>
+              </div>
+              <div class="heritage-item" onclick="filterShop('jewelry')">
+                <div class="heritage-icon">📿</div>
+                <div>Beaded Jewelry</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="shop-categories" id="shop-categories">
+            <div class="category-card active" onclick="filterShop('all')">
+              <div class="category-icon">🛍️</div>
+              <div class="category-name">All Items</div>
+            </div>
+            <div class="category-card" onclick="filterShop('top')">
+              <div class="category-icon">👕</div>
+              <div class="category-name">Tops</div>
+            </div>
+            <div class="category-card" onclick="filterShop('bottom')">
+              <div class="category-icon">👖</div>
+              <div class="category-name">Bottoms</div>
+            </div>
+            <div class="category-card" onclick="filterShop('dress')">
+              <div class="category-icon">👗</div>
+              <div class="category-name">Dresses</div>
+            </div>
+            <div class="category-card" onclick="filterShop('shoes')">
+              <div class="category-icon">👟</div>
+              <div class="category-name">Shoes</div>
+            </div>
+            <div class="category-card" onclick="filterShop('outerwear')">
+              <div class="category-icon">🧥</div>
+              <div class="category-name">Outerwear</div>
+            </div>
+          </div>
+
+          <div id="shop-results" class="shop-grid"></div>
+        </div>
+      </div>
+
+      <!-- AI Recommendations -->
+      <div id="ai-tab" class="tab-content">
+        <div class="tab-container">
+          <div class="card">
+            <h2>🤖 AI Style Assistant</h2>
+            <div class="form-row">
+              <select id="occasion">
+                <option value="casual">😎 Casual</option>
+                <option value="work">💼 Work</option>
+                <option value="date">❤️ Date Night</option>
+                <option value="event">🎉 Special Event</option>
+                <option value="cultural">🌍 Cultural Event</option>
+              </select>
+              <input type="number" id="temperature" placeholder="Temp (°C)" />
+              <button class="btn" onclick="getAIRecommendation()">✨ Get Suggestion</button>
+            </div>
+          </div>
+          <div id="ai-result">
+            <div class="ai-suggestion">
+              <h3>✨ AI is ready to help!</h3>
+              <div class="suggestion-outfit">Add some items to your wardrobe and get personalized outfit suggestions</div>
+              <div class="suggestion-tip">💡 The more items you have, the better the suggestions!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wardrobe Tab -->
+      <div id="wardrobe-tab" class="tab-content">
+        <div class="tab-container">
+          <div class="card">
+            <h2>👔 My Wardrobe</h2>
+            <div class="form-row">
+              <input id="item-name" placeholder="Item name" />
+              <select id="item-category">
+                <option value="top">👕 Top</option>
+                <option value="bottom">👖 Bottom</option>
+                <option value="dress">👗 Dress</option>
+                <option value="shoes">👟 Shoes</option>
+                <option value="outerwear">🧥 Jacket</option>
+              </select>
+              <select id="item-color">
+                <option value="white">White</option>
+                <option value="black">Black</option>
+                <option value="blue">Blue</option>
+                <option value="red">Red</option>
+                <option value="neutral">Neutral</option>
+              </select>
+              <button class="btn" onclick="addWardrobeItem()">Add Item</button>
+            </div>
+          </div>
+          <div id="wardrobe-list" class="wardrobe-grid"></div>
+        </div>
+      </div>
+
+      <!-- Map Tab -->
+      <div id="map-tab" class="tab-content">
+        <div class="map-container">
+          <div class="map-header">
+            <h2>🗺️ Style Map</h2>
+            <p>See where fashion enthusiasts are sharing their looks</p>
+          </div>
+          <div class="map-view" id="map-view">
+            <div class="map-placeholder">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">🗺️</div>
+              <div>Interactive Fashion Map</div>
+              <div style="font-size: 0.8rem; margin-top: 0.5rem;">Click on markers to see user outfits</div>
+            </div>
+            <!-- User markers will be added dynamically -->
+          </div>
+          <div style="margin-top: 1rem; text-align: center;">
+            <button class="btn" onclick="refreshMap()">Refresh Locations</button>
+            <button class="btn secondary" onclick="toggleMapMode()">Satellite View</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <nav class="bottom-nav">
+      <div class="nav-item active" onclick="switchTab('explore')">
+        <div class="nav-icon">🔍</div>
+        <div class="nav-label">Explore</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('community')">
+        <div class="nav-icon">👥</div>
+        <div class="nav-label">Community</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('shop')">
+        <div class="nav-icon">🛍️</div>
+        <div class="nav-label">Shop</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('ai')">
+        <div class="nav-icon">🤖</div>
+        <div class="nav-label">AI Style</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('wardrobe')">
+        <div class="nav-icon">👔</div>
+        <div class="nav-label">Wardrobe</div>
+      </div>
+      <div class="nav-item" onclick="switchTab('map')">
+        <div class="nav-icon">🗺️</div>
+        <div class="nav-label">Map</div>
+      </div>
+    </nav>
+  </div>
+</body>
+  <script>
+    const API = "http://127.0.0.1:5000";
+    let currentUser = null;
+    let currentTab = 'explore';
+    let selectedImage = null;
+    let currentShopFilter = 'all';
+    let communityTab = 'discussions';
+
+    // Login/Logout Functions
+    function login() {
+      const username = document.getElementById('username').value.trim();
+      const location = document.getElementById('user-location').value;
+      
+      if (!username) {
+        showNotification('Please enter your name', 'error');
+        return;
+      }
+      
+      currentUser = { name: username, location: location, lat: getLocationCoords(location).lat, lng: getLocationCoords(location).lng };
+      document.getElementById('current-user').textContent = `👤 ${username}`;
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').classList.add('active');
+      
+      showNotification(`Welcome ${username}! 🎉`);
+      loadInitialData();
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('app').classList.remove('active');
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('username').value = '';
+    }
+
+    // Location coordinates for Kenyan cities
+    function getLocationCoords(city) {
+      const coords = {
+        'Nairobi': { lat: -1.2921, lng: 36.8219 },
+        'Mombasa': { lat: -4.0435, lng: 39.6682 },
+        'Kisumu': { lat: -0.0917, lng: 34.7680 },
+        'Nakuru': { lat: -0.3031, lng: 36.0800 },
+        'Eldoret': { lat: 0.5143, lng: 35.2698 }
+      };
+      return coords[city] || coords['Nairobi'];
+    }
+
+    // Image handling
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      if (!file.type.startsWith('image/')) {
+        showNotification('Please select an image file', 'error');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('Image size must be less than 5MB', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.getElementById('image-canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Resize image to max 800px width
+          const maxWidth = 800;
+          const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+          canvas.width = img.width * ratio;
+          canvas.height = img.height * ratio;
+          
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          selectedImage = canvas.toDataURL('image/jpeg', 0.8);
+          
+          showNotification('Photo uploaded! 📸');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Notification System
+    function showNotification(message, type = 'success') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type === 'error' ? 'error' : ''}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => notification.classList.add('show'), 100);
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Tab switching
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+      
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+      event.target.closest('.nav-item').classList.add('active');
+      currentTab = tabName;
+      
+      if (tabName === 'explore') loadPosts();
+      if (tabName === 'shop') searchShop();
+      if (tabName === 'wardrobe') loadWardrobe();
+      if (tabName === 'map') initMap();
+    }
+
+    // Community tab switching
+    function switchCommunityTab(tabName) {
+      document.querySelectorAll('.community-tab').forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+      communityTab = tabName;
+      
+      // Update community content based on selected tab
+      loadCommunityContent(tabName);
+    }
+
+    function loadCommunityContent(tabName) {
+      const content = document.getElementById('community-content');
+      
+      const contentMap = {
+        'discussions': `
+          <div class="discussion-thread">
+            <div class="thread-title">Best Styling Tips for Kenyan Weather</div>
+            <div class="thread-meta">Posted by @StyleGuru_KE • 2 hours ago • 🌟 45 replies</div>
+            <div class="thread-preview">Living in Kenya means dealing with diverse weather patterns. Here are my top tips for staying stylish while comfortable...</div>
+          </div>
+          
+          <div class="discussion-thread">
+            <div class="thread-title">Where to Find Authentic Kente in Nairobi?</div>
+            <div class="thread-meta">Posted by @AfricanPride • 5 hours ago • 🌟 28 replies</div>
+            <div class="thread-preview">Looking for quality Kente fabric and accessories. Any recommendations for authentic shops?</div>
+          </div>
+        `,
+        'styling-tips': `
+          <div class="discussion-thread">
+            <div class="thread-title">Color Psychology in Fashion</div>
+            <div class="thread-meta">Posted by @ColorExpert • 1 hour ago • 🌟 23 replies</div>
+            <div class="thread-preview">Understanding how colors affect mood and perception can transform your styling choices...</div>
+          </div>
+          
+          <div class="discussion-thread">
+            <div class="thread-title">Mixing Patterns Like a Pro</div>
+            <div class="thread-meta">Posted by @PatternMaster • 3 hours ago • 🌟 56 replies</div>
+            <div class="thread-preview">Learn the secrets of combining different patterns without looking overwhelming...</div>
+          </div>
+        `,
+        'challenges': `
+          <div class="discussion-thread">
+            <div class="thread-title">30-Day Capsule Wardrobe Challenge</div>
+            <div class="thread-meta">Challenge Host: @MinimalistStyle • Active • 🌟 234 participants</div>
+            <div class="thread-preview">Create 30 different outfits using only 15 pieces. Join the challenge and discover your creativity!</div>
+          </div>
+          
+          <div class="discussion-thread">
+            <div class="thread-title">African Print Friday Challenge</div>
+            <div class="thread-meta">Challenge Host: @AfricanFashion • Weekly • 🌟 189 participants</div>
+            <div class="thread-preview">Every Friday, showcase your best African print outfit and inspire others!</div>
+          </div>
+        `
+      };
+      
+      content.innerHTML = contentMap[tabName] || contentMap['discussions'];
+    }
+
+    function createThread() {
+      const title = document.getElementById('thread-title').value.trim();
+      const content = document.getElementById('thread-content').value.trim();
+      
+      if (!title || !content) {
+        showNotification('Please fill in both title and content', 'error');
+        return;
+      }
+      
+      // Create new thread element
+      const newThread = document.createElement('div');
+      newThread.className = 'discussion-thread';
+      newThread.innerHTML = `
+        <div class="thread-title">${title}</div>
+        <div class="thread-meta">Posted by @${currentUser.name} • Just now • 🌟 0 replies</div>
+        <div class="thread-preview">${content.substring(0, 100)}${content.length > 100 ? '...' : ''}</div>
+      `;
+      
+      document.getElementById('community-content').prepend(newThread);
+      
+      // Clear form
+      document.getElementById('thread-title').value = '';
+      document.getElementById('thread-content').value = '';
+      
+      showNotification('Discussion posted! 💬');
+    }
+
+    // API Functions
+    async function apiCall(endpoint, method = 'GET', data = null) {
+      try {
+        const options = {
+          method,
+          headers: { 'Content-Type': 'application/json' }
+        };
+        if (data) options.body = JSON.stringify(data);
+        
+        const response = await fetch(`${API}${endpoint}`, options);
+        return await response.json();
+      } catch (error) {
+        showNotification('Connection error', 'error');
+        throw error;
+      }
+    }
+
+    // Social Feed Functions
+    async function loadPosts() {
+      try {
+        const data = await apiCall('/api/posts');
+        const container = document.getElementById('posts-container');
+        
+        if (data.posts.length === 0) {
+          container.innerHTML = '<div class="empty-state"><h3>No posts yet</h3><p>Share your first outfit!</p></div>';
+          return;
+        }
+        
+        container.innerHTML = data.posts.map(post => `
+          <div class="post">
+            <div class="post-header">
+              <div class="avatar">${post.user.charAt(0)}</div>
+              <div>
+                <div class="post-user">${post.user}</div>
+                <div class="post-time">${timeAgo(post.created_at || Date.now())}</div>
+              </div>
+            </div>
+            <div class="post-image-container">
+              ${post.image ? 
+                `<img src="${post.image}" alt="Outfit" class="post-image">` : 
+                `<div class="post-image">${getOutfitEmojis(post.outfit)}</div>`
+              }
+            </div>
+            <div class="post-outfit">${post.outfit}</div>
+            <div class="post-actions">
+              <div class="action-buttons">
+                <button class="action-btn ${post.stars > 0 ? 'rated' : ''}" onclick="ratePost(${post.id}, this)">⭐</button>
+                <button class="action-btn">💬</button>
+                <button class="action-btn">📤</button>
+              </div>
+              <div class="post-stats">${post.stars || 0}⭐ • 3 comments</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        document.getElementById('posts-container').innerHTML = '<div class="empty-state"><h3>Could not load posts</h3></div>';
+      }
+    }
+
+    async function createPost() {
+      const outfit = document.getElementById('outfit-input').value.trim();
+      if (!outfit) {
+        showNotification('Please describe your outfit', 'error');
+        return;
+      }
+      
+      try {
+        const postData = { 
+          user: currentUser.name, 
+          outfit: outfit,
+          location: currentUser.location
+        };
+        
+        if (selectedImage) {
+          postData.image = selectedImage;
+        }
+        
+        await apiCall('/api/posts', 'POST', postData);
+        
+        document.getElementById('outfit-input').value = '';
+        selectedImage = null;
+        document.getElementById('image-upload-input').value = '';
+        showNotification('Outfit shared! 📸');
+        loadPosts();
+      } catch (error) {
+        showNotification('Failed to share outfit', 'error');
+      }
+    }
+
+    async function ratePost(postId, btn) {
+      try {
+        await apiCall(`/api/posts/${postId}/rate`, 'POST', { stars: 5 });
+        btn.style.color = '#fbbf24';
+        btn.classList.add('rated');
+        showNotification('Rated 5 stars! ⭐');
+        setTimeout(() => loadPosts(), 1000);
+      } catch (error) {
+        showNotification('Rating failed', 'error');
+      }
+    }
+
+    // Wardrobe Functions
+    async function loadWardrobe() {
+      try {
+        const data = await apiCall('/api/wardrobe');
+        const container = document.getElementById('wardrobe-list');
+        
+        if (data.wardrobe.length === 0) {
+          container.innerHTML = '<div class="empty-state"><h3>Empty wardrobe</h3><p>Add your first item!</p></div>';
+          return;
+        }
+        
+        container.innerHTML = data.wardrobe.map(item => `
+          <div class="wardrobe-item">
+            <div class="item-icon">${item.icon}</div>
+            <div class="item-name">${item.name}</div>
+            <div class="item-details">${item.category} • ${item.color}</div>
+            <button class="btn secondary small" onclick="deleteWardrobeItem(${item.id})">Remove</button>
+          </div>
+        `).join('');
+      } catch (error) {
+        document.getElementById('wardrobe-list').innerHTML = '<div class="empty-state"><h3>Could not load wardrobe</h3></div>';
+      }
+    }
+
+    async function addWardrobeItem() {
+      const name = document.getElementById('item-name').value.trim();
+      const category = document.getElementById('item-category').value;
+      const color = document.getElementById('item-color').value;
+      
+      if (!name) {
+        showNotification('Please enter item name', 'error');
+        return;
+      }
+      
+      const icons = { top: '👕', bottom: '👖', dress: '👗', shoes: '👟', outerwear: '🧥' };
+      
+      try {
+        await apiCall('/api/wardrobe', 'POST', {
+          name,
+          category,
+          color,
+          icon: icons[category],
+          price_band: 'medium'
+        });
+        
+        document.getElementById('item-name').value = '';
+        showNotification(`${icons[category]} Added to wardrobe!`);
+        loadWardrobe();
+      } catch (error) {
+        showNotification('Failed to add item', 'error');
+      }
+    }
+
+    async function deleteWardrobeItem(itemId) {
+      if (!confirm('Remove this item?')) return;
+      
+      try {
+        await apiCall(`/api/wardrobe/${itemId}`, 'DELETE');
+        showNotification('Item removed');
+        loadWardrobe();
+      } catch (error) {
+        showNotification('Failed to remove item', 'error');
+      }
+    }
+
+    // AI Recommendations
+    async function getAIRecommendation() {
+      try {
+        const occasion = document.getElementById('occasion').value;
+        const temp = document.getElementById('temperature').value;
+        
+        const params = new URLSearchParams({ occasion });
+        if (temp) params.set('temp_c', temp);
+        
+        const data = await apiCall(`/api/dresser?${params}`);
+        
+        // Enhanced recommendations for cultural occasions
+        let culturalTip = '';
+        if (occasion === 'cultural') {
+          culturalTip = ' Consider adding traditional African elements like Kente accessories or Ankara prints to honor cultural heritage.';
+        }
+        
+        document.getElementById('ai-result').innerHTML = `
+          <div class="ai-suggestion">
+            <h3>✨ Perfect Outfit for ${occasion.charAt(0).toUpperCase() + occasion.slice(1)}</h3>
+            <div class="suggestion-outfit">${data.outfit}</div>
+            <div class="suggestion-tip">💡 ${data.tip}${culturalTip}</div>
+            <button class="btn secondary" onclick="getAIRecommendation()" style="margin-top: 1rem;">New Suggestion</button>
+          </div>
+        `;
+      } catch (error) {
+        document.getElementById('ai-result').innerHTML = `
+          <div class="ai-suggestion">
+            <h3>🤖 Need more items!</h3>
+            <div class="suggestion-outfit">Add more clothes to your wardrobe for better suggestions</div>
+            <div class="suggestion-tip">💡 Try adding tops, bottoms, and shoes first</div>
+          </div>
+        `;
+      }
+    }
+
+    // Shop Functions
+    function filterShop(category) {
+      currentShopFilter = category;
+      
+      // Update active category
+      document.querySelectorAll('.category-card').forEach(card => card.classList.remove('active'));
+      event.target.closest('.category-card').classList.add('active');
+      
+      searchShop();
+    }
+
+    async function searchShop() {
+      try {
+        const searchTerm = document.getElementById('search-input')?.value || '';
+        const params = new URLSearchParams({ region: currentUser?.location || 'Nairobi' });
+        if (currentShopFilter !== 'all') params.set('category', currentShopFilter);
+        
+        // Get regular shop data
+        const data = await apiCall(`/api/shops/search?${params}`);
+        let results = data.results;
+        
+        // Add African heritage items based on filter
+        if (currentShopFilter === 'kente' || currentShopFilter === 'all') {
+          results = results.concat(getHeritageItems('kente'));
+        }
+        if (currentShopFilter === 'dashiki' || currentShopFilter === 'all') {
+          results = results.concat(getHeritageItems('dashiki'));
+        }
+        if (currentShopFilter === 'ankara' || currentShopFilter === 'all') {
+          results = results.concat(getHeritageItems('ankara'));
+        }
+        if (currentShopFilter === 'jewelry' || currentShopFilter === 'all') {
+          results = results.concat(getHeritageItems('jewelry'));
+        }
+        
+        // Filter by search term
+        if (searchTerm) {
+          results = results.filter(item => 
+            item.name.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        }
+        
+        const container = document.getElementById('shop-results');
+        
+        container.innerHTML = results.map(item => `
+          <div class="shop-item">
+            <div class="shop-icon">${item.icon}</div>
+            <div class="shop-name">${item.name}</div>
+            <div class="shop-price">KES ${getPriceFromBand(item.price_band)}</div>
+            <div class="shop-store">${item.merchant}</div>
+            <button class="btn small" onclick="buyItem('${item.name}', '${item.icon}', '${item.category}', '${item.price_band}')" style="width: 100%; margin-top: 0.5rem;">Add to Wardrobe</button>
+          </div>
+        `).join('');
+      } catch (error) {
+        document.getElementById('shop-results').innerHTML = '<div class="empty-state"><h3>Could not load shop items</h3></div>';
+      }
+    }
+
+    function getHeritageItems(type) {
+      const heritageItems = {
+        kente: [
+          { name: "Traditional Kente Headband", icon: "🎀", category: "accessory", price_band: "medium", merchant: "African Heritage Store" },
+          { name: "Kente Print Bow Tie", icon: "🎗️", category: "accessory", price_band: "low", merchant: "Cultural Fashion Hub" },
+          { name: "Kente Woven Belt", icon: "🏷️", category: "accessory", price_band: "medium", merchant: "Ghana Imports KE" }
+        ],
+        dashiki: [
+          { name: "Modern Dashiki Shirt", icon: "👔", category: "top", price_band: "medium", merchant: "Afrocentric Styles" },
+          { name: "Dashiki Print Blouse", icon: "👚", category: "top", price_band: "medium", merchant: "Ubuntu Fashion" },
+          { name: "Contemporary Dashiki Dress", icon: "👗", category: "dress", price_band: "high", merchant: "African Elegance" }
+        ],
+        ankara: [
+          { name: "Ankara Print Blazer", icon: "🧥", category: "outerwear", price_band: "high", merchant: "Ankara Couture" },
+          { name: "Ankara Business Jacket", icon: "🧥", category: "outerwear", price_band: "high", merchant: "Professional African Wear" },
+          { name: "Ankara Casual Blazer", icon: "🧥", category: "outerwear", price_band: "medium", merchant: "Modern African Fashion" }
+        ],
+        jewelry: [
+          { name: "Maasai Beaded Necklace", icon: "📿", category: "accessory", price_band: "medium", merchant: "Maasai Crafts Collective" },
+          { name: "Traditional Beaded Bracelet", icon: "💎", category: "accessory", price_band: "low", merchant: "Handmade Kenya" },
+          { name: "Ethnic Beaded Earrings", icon: "💍", category: "accessory", price_band: "low", merchant: "Cultural Jewelry Store" }
+        ]
+      };
+      
+      return heritageItems[type] || [];
+    }
+
+    async function buyItem(name, icon, category, price_band) {
+      try {
+        await apiCall('/api/wardrobe', 'POST', {
+          name,
+          icon,
+          category,
+          price_band,
+          color: 'neutral'
+        });
+        
+        showNotification(`${icon} ${name} added to wardrobe!`);
+      } catch (error) {
+        showNotification('Purchase failed', 'error');
+      }
+    }
+
+    // Map Functions
+    function initMap() {
+      const mapView = document.getElementById('map-view');
+      mapView.innerHTML = `
+        <div class="map-placeholder">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🗺️</div>
+          <div>Kenya Fashion Map</div>
+          <div style="font-size: 0.8rem; margin-top: 0.5rem;">Click on markers to see user outfits</div>
+        </div>
+      `;
+      
+      // Add user markers
+      setTimeout(() => {
+        addUserMarkers();
+      }, 500);
+    }
+
+    function addUserMarkers() {
+      const mapView = document.getElementById('map-view');
+      
+      // Sample users with different locations
+      const users = [
+        { name: "Alex", initial: "A", location: "Nairobi", x: 45, y: 60, outfit: "Casual Friday look with denim" },
+        { name: "Sarah", initial: "S", location: "Mombasa", x: 75, y: 80, outfit: "Beach vibes with flowy dress" },
+        { name: "Mike", initial: "M", location: "Kisumu", x: 25, y: 55, outfit: "Smart casual for work meeting" },
+        { name: "Grace", initial: "G", location: "Nakuru", x: 40, y: 45, outfit: "Traditional dashiki for cultural event" },
+        { name: "John", initial: "J", location: "Eldoret", x: 30, y: 35, outfit: "Athletic wear for morning run" }
+      ];
+      
+      // Add current user
+      const currentUserCoords = getMapPosition(currentUser?.location || 'Nairobi');
+      users.push({
+        name: currentUser?.name || "You",
+        initial: currentUser?.name?.charAt(0) || "Y",
+        location: currentUser?.location || 'Nairobi',
+        x: currentUserCoords.x,
+        y: currentUserCoords.y,
+        outfit: "Your latest outfit post"
+      });
+      
+      users.forEach(user => {
+        const marker = document.createElement('div');
+        marker.className = 'user-marker';
+        marker.style.left = `${user.x}%`;
+        marker.style.top = `${user.y}%`;
+        marker.textContent = user.initial;
+        marker.onclick = () => showMarkerPopup(user, marker);
+        mapView.appendChild(marker);
+      });
+    }
+
+    function getMapPosition(city) {
+      const positions = {
+        'Nairobi': { x: 45, y: 60 },
+        'Mombasa': { x: 75, y: 80 },
+        'Kisumu': { x: 25, y: 55 },
+        'Nakuru': { x: 40, y: 45 },
+        'Eldoret': { x: 30, y: 35 }
+      };
+      return positions[city] || positions['Nairobi'];
+    }
+
+    function showMarkerPopup(user, marker) {
+      // Remove existing popups
+      document.querySelectorAll('.marker-popup').forEach(popup => popup.remove());
+      
+      const popup = document.createElement('div');
+      popup.className = 'marker-popup';
+      popup.innerHTML = `
+        <strong>${user.name}</strong><br>
+        📍 ${user.location}<br>
+        👔 ${user.outfit}
+      `;
+      
+      marker.appendChild(popup);
+      
+      // Auto-remove popup after 3 seconds
+      setTimeout(() => popup.remove(), 3000);
+    }
+
+    function refreshMap() {
+      initMap();
+      showNotification('Map refreshed! 🗺️');
+    }
+
+    function toggleMapMode() {
+      const mapView = document.getElementById('map-view');
+      const isSatellite = mapView.style.background === 'rgb(34, 34, 34)';
+      
+      if (isSatellite) {
+        mapView.style.background = '#222';
+        showNotification('Switched to standard view');
+      } else {
+        mapView.style.background = '#2a4a3a';
+        showNotification('Switched to satellite view');
+      }
+    }
+
+    // Utility Functions
+    function timeAgo(timestamp) {
+      const now = new Date();
+      const time = new Date(timestamp);
+      const diff = Math.floor((now - time) / 1000);
+      
+      if (diff < 60) return 'just now';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      return Math.floor(diff / 86400) + 'd ago';
+    }
+
+    function getOutfitEmojis(outfit) {
+      const emojis = outfit.match(/[👔👕👖👗🧥👟👠🩴👞🧦]/g);
+      return emojis ? emojis.slice(0, 3).join('') : '👔✨';
+    }
+
+    function getPriceFromBand(band) {
+      const prices = { low: '1,500', medium: '4,000', high: '12,000' };
+      return prices[band] || '3,000';
+    }
+
+    // Initialize
+    async function loadInitialData() {
+      await loadPosts();
+      loadCommunityContent('discussions');
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        if (e.target.id === 'item-name') addWardrobeItem();
+        if (e.target.id === 'search-input') searchShop();
+        if (e.target.id === 'thread-title') document.getElementById('thread-content').focus();
+      }
+    });
+
+    // Auto-resize textarea
+    document.addEventListener('input', function(e) {
+      if (e.target.tagName === 'TEXTAREA') {
+        e.target.style.height = 'auto';
+        e.target.style.height = e.target.scrollHeight + 'px';
+      }
+    });
+
+    // Initialize app when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set initial shop filter
+      currentShopFilter = 'all';
+    });
+  </script>
+
+</html>

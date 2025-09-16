@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wardrobe AI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2); margin: 0; color: #1f2937; min-height: 100vh; }
+    header { background: rgba(255,255,255,0.95); padding: 1rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+    header h1 { margin: 0; font-size: 1.75rem; font-weight: 700; background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .container { padding: 1.5rem 1rem; max-width: 1200px; margin: 0 auto; }
+    .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 1.25rem; transition: all 0.2s ease; }
+    .card:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+    .card.featured { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+    .btn { background: #6366f1; border: none; color: white; padding: 0.6rem 1rem; border-radius: 12px; cursor: pointer; font-weight: 500; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; }
+    .btn:hover { background: #4f46e5; }
+    .btn.success { background: #10b981; }
+    .btn.danger { background: #ef4444; }
+    .btn.secondary { background: #6b7280; }
+    .btn.small { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+    input, select { padding: 0.6rem; border: 1px solid #e5e7eb; border-radius: 12px; margin: 0.2rem; font-size: 0.9rem; }
+    input:focus, select:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1); }
+    .form-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-bottom: 0.75rem; }
+    .form-row > * { flex: 1; min-width: 120px; }
+    .pill { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; background: #f3f4f6; font-size: 0.75rem; margin: 0.1rem; }
+    .tab-container { display: flex; gap: 0.3rem; margin-bottom: 1.5rem; background: rgba(255,255,255,0.1); padding: 0.4rem; border-radius: 12px; }
+    .tab { flex: 1; padding: 0.6rem 0.4rem; text-align: center; border-radius: 8px; cursor: pointer; color: white; font-weight: 500; font-size: 0.85rem; }
+    .tab.active { background: white; color: #1f2937; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .loading { display: flex; align-items: center; justify-content: center; padding: 1.5rem; color: #6b7280; }
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 2rem; background: white; border-radius: 12px; border: 2px dashed #e5e7eb; }
+    .outfit-suggestion { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; padding: 1.5rem; border-radius: 12px; text-align: center; margin: 1rem 0; }
+    .stats { display: flex; gap: 1rem; font-size: 0.85rem; color: #6b7280; justify-content: center; flex-wrap: wrap; }
+    .muted { color: #6b7280; font-size: 0.85rem; }
+    @media (max-width: 768px) { .form-row { flex-direction: column; } .form-row > * { width: 100%; } .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>👔 Wardrobe AI</h1>
+    <div id="weather">🌤 Loading...</div>
+    <div id="profileLine" class="muted"></div>
+  </header>
+
+  <div class="container">
+    <!-- Profile -->
+    <div class="card featured">
+      <div class="form-row">
+        <input id="prof-name" placeholder="Name" style="flex: 2;"/>
+        <select id="prof-location">
+          <option value="Nairobi">Nairobi</option>
+          <option value="Mombasa">Mombasa</option>
+          <option value="Kisumu">Kisumu</option>
+        </select>
+        <select id="prof-style">
+          <option value="Casual">Casual</option>
+          <option value="Smart Casual">Smart Casual</option>
+          <option value="Formal">Formal</option>
+        </select>
+        <select id="prof-budget">
+          <option value="low">Budget</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">Premium</option>
+        </select>
+        <button class="btn" onclick="saveProfile()" style="background: rgba(255,255,255,0.2);">Save</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-container">
+      <div class="tab active" onclick="switchTab('wardrobe')">👕 Wardrobe</div>
+      <div class="tab" onclick="switchTab('dresser')">🤖 AI Style</div>
+      <div class="tab" onclick="switchTab('explore')">🔍 Discover</div>
+      <div class="tab" onclick="switchTab('shop')">🛍️ Shop</div>
+      <div class="tab" onclick="switchTab('social')">👥 Social</div>
+    </div>
+
+    <!-- Wardrobe -->
+    <div id="wardrobe-tab" class="tab-content active">
+      <div class="card">
+        <div class="form-row">
+          <input id="item-name" placeholder="Item name" style="flex: 2;"/>
+          <select id="item-icon">
+            <option value="👕">👕 Top</option>
+            <option value="👖">👖 Bottom</option>
+            <option value="👗">👗 Dress</option>
+            <option value="🧥">🧥 Jacket</option>
+            <option value="👟">👟 Shoes</option>
+          </select>
+          <select id="item-category">
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+            <option value="dress">Dress</option>
+            <option value="outerwear">Jacket</option>
+            <option value="shoes">Shoes</option>
+          </select>
+          <select id="item-color">
+            <option value="neutral">Neutral</option>
+            <option value="white">White</option>
+            <option value="black">Black</option>
+            <option value="blue">Blue</option>
+            <option value="red">Red</option>
+          </select>
+          <select id="item-price">
+            <option value="low">Budget</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">Premium</option>
+          </select>
+          <button class="btn success" onclick="addWardrobe()">Add</button>
+        </div>
+      </div>
+      
+      <div id="wardrobe-stats" class="card" style="text-align: center; background: #f3f4f6;">
+        <div class="stats">
+          <span>👕 <b id="total-items">0</b> items</span>
+          <span>💰 <b id="total-value">KES 0</b></span>
+          <span>🎨 <b id="color-variety">0</b> colors</span>
+        </div>
+      </div>
+
+      <div id="wardrobe-list" class="grid"></div>
+    </div>
+
+    <!-- AI Dresser -->
+    <div id="dresser-tab" class="tab-content">
+      <div class="card">
+        <div class="form-row">
+          <select id="occ">
+            <option value="casual">😎 Casual</option>
+            <option value="work">💼 Work</option>
+            <option value="date">❤️ Date</option>
+            <option value="wedding">💒 Event</option>
+          </select>
+          <input id="temp" type="number" placeholder="Temp °C"/>
+          <button class="btn" onclick="loadDresser()">✨ Suggest</button>
+        </div>
+      </div>
+      <div id="dresser-result"></div>
+    </div>
+
+    <!-- Explore -->
+    <div id="explore-tab" class="tab-content">
+      <div id="explore-list" class="grid"></div>
+    </div>
+
+    <!-- Shop -->
+    <div id="shop-tab" class="tab-content">
+      <div class="card">
+        <div class="form-row">
+          <select id="shop-region">
+            <option value="Nairobi">Nairobi</option>
+            <option value="Mombasa">Mombasa</option>
+          </select>
+          <select id="shop-category">
+            <option value="">All</option>
+            <option value="top">Tops</option>
+            <option value="shoes">Shoes</option>
+          </select>
+          <button class="btn" onclick="searchShops()">Search</button>
+        </div>
+      </div>
+      <div id="shop-results" class="grid"></div>
+    </div>
+
+    <!-- Social -->
+    <div id="social-tab" class="tab-content">
+      <div class="card">
+        <div class="form-row">
+          <input id="username" placeholder="Name"/>
+          <input id="outfit-desc" placeholder="Describe outfit..." style="flex: 2;"/>
+          <button class="btn success" onclick="addPost()">Share</button>
+        </div>
+      </div>
+      <div id="for-you-list" class="grid"></div>
+    </div>
+
+  </div>
+
+  <div id="notifications" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+  <script>
+    const API = "http://127.0.0.1:5000";
+    let currentTab = 'wardrobe';
+
+    function showNotification(msg, type = 'success') {
+      const div = document.createElement('div');
+      div.style.cssText = `background: ${type === 'success' ? '#10b981' : '#ef4444'}; color: white; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; cursor: pointer; font-size: 0.85rem;`;
+      div.textContent = msg;
+      document.getElementById('notifications').appendChild(div);
+      div.onclick = () => div.remove();
+      setTimeout(() => div.remove(), 3000);
+    }
+
+    function switchTab(tabName) {
+      document.querySelector('.tab.active').classList.remove('active');
+      event.target.classList.add('active');
+      document.querySelector('.tab-content.active').classList.remove('active');
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+      currentTab = tabName;
+      
+      if (tabName === 'explore') loadExplore();
+      if (tabName === 'shop') searchShops();
+      if (tabName === 'social') loadPosts();
+      if (tabName === 'dresser') loadDresser();
+    }
+
+    async function loadProfile() {
+      try {
+        const [p, w] = await Promise.all([
+          fetch(`${API}/api/profile`).then(r => r.json()),
+          fetch(`${API}/api/weather?city=Nairobi`).then(r => r.json())
+        ]);
+        
+        document.getElementById("prof-name").value = p.user || '';
+        document.getElementById("prof-location").value = p.location || 'Nairobi';
+        document.getElementById("prof-style").value = p.style || 'Casual';
+        document.getElementById("prof-budget").value = p.budget || 'medium';
+        document.getElementById("profileLine").textContent = `👤 ${p.user} • 📍 ${p.location}`;
+        document.getElementById("weather").innerHTML = `🌤 ${w.city}: <b>${w.temp_c}°C</b>`;
+      } catch (e) {
+        showNotification("Failed to load profile", "error");
+      }
+    }
+
+    async function saveProfile() {
+      const name = document.getElementById("prof-name").value.trim();
+      if (!name) return showNotification("Enter your name", "error");
+      
+      try {
+        await fetch(`${API}/api/profile`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            user: name,
+            location: document.getElementById("prof-location").value,
+            style: document.getElementById("prof-style").value,
+            budget: document.getElementById("prof-budget").value
+          })
+        });
+        showNotification("Profile saved! 🎉");
+        await loadProfile();
+      } catch (e) {
+        showNotification("Save failed", "error");
+      }
+    }
+
+    async function loadWardrobe() {
+      try {
+        const res = await fetch(`${API}/api/wardrobe`);
+        const data = await res.json();
+        const list = document.getElementById("wardrobe-list");
+        
+        if (data.wardrobe.length === 0) {
+          list.innerHTML = `<div class="empty-state"><h3>Empty wardrobe</h3><p>Add items to get started!</p></div>`;
+          updateStats([]);
+          return;
+        }
+        
+        list.innerHTML = data.wardrobe.map(item => `
+          <div class="card">
+            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${item.icon}</div>
+            <div><b>${item.name}</b></div>
+            <div style="margin: 0.5rem 0;">
+              <span class="pill">${item.category}</span>
+              <span class="pill">${item.color}</span>
+              <span class="pill">${item.price_band}</span>
+            </div>
+            <button class="btn small danger" onclick="deleteItem(${item.id})">Remove</button>
+          </div>
+        `).join('');
+        
+        updateStats(data.wardrobe);
+      } catch (e) {
+        showNotification("Load failed", "error");
+      }
+    }
+
+    function updateStats(items) {
+      document.getElementById("total-items").textContent = items.length;
+      document.getElementById("color-variety").textContent = new Set(items.map(i => i.color)).size;
+      const values = { low: 1500, medium: 4000, high: 12000 };
+      const total = items.reduce((sum, item) => sum + (values[item.price_band] || 0), 0);
+      document.getElementById("total-value").textContent = `KES ${total.toLocaleString()}`;
+    }
+
+    async function addWardrobe() {
+      const name = document.getElementById("item-name").value.trim();
+      if (!name) return showNotification("Enter item name", "error");
+      
+      try {
+        const res = await fetch(`${API}/api/wardrobe`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            name,
+            icon: document.getElementById("item-icon").value,
+            category: document.getElementById("item-category").value,
+            color: document.getElementById("item-color").value,
+            price_band: document.getElementById("item-price").value
+          })
+        });
+        
+        if (!res.ok) {
+          const err = await res.json();
+          return showNotification(err.error, "error");
+        }
+        
+        document.getElementById("item-name").value = "";
+        showNotification("Added! 🎉");
+        await loadWardrobe();
+      } catch (e) {
+        showNotification("Add failed", "error");
+      }
+    }
+
+    async function deleteItem(id) {
+      if (!confirm("Remove item?")) return;
+      try {
+        await fetch(`${API}/api/wardrobe/${id}`, { method: "DELETE" });
+        showNotification("Removed");
+        await loadWardrobe();
+      } catch (e) {
+        showNotification("Delete failed", "error");
+      }
+    }
+
+    async function loadDresser() {
+      const div = document.getElementById("dresser-result");
+      div.innerHTML = '<div class="loading">Generating...</div>';
+      
+      try {
+        const params = new URLSearchParams({
+          occasion: document.getElementById("occ").value,
+          budget: document.getElementById("prof-budget").value
+        });
+        const temp = document.getElementById("temp").value;
+        if (temp) params.set("temp_c", temp);
+        
+        const res = await fetch(`${API}/api/dresser?${params}`);
+        const data = await res.json();
+        
+        div.innerHTML = `
+          <div class="outfit-suggestion">
+            <h3>✨ Perfect outfit</h3>
+            <div style="font-size: 1.1rem; margin: 1rem 0;">${data.outfit}</div>
+            <div style="opacity: 0.9;">💡 ${data.tip}</div>
+          </div>
+        `;
+      } catch (e) {
+        div.innerHTML = `<div class="card" style="background: #ef4444; color: white;"><p>No outfit suggestion available. Add more items!</p></div>`;
+      }
+    }
+
+    async function loadExplore() {
+      try {
+        const res = await fetch(`${API}/api/explore`);
+        const data = await res.json();
+        document.getElementById("explore-list").innerHTML = data.explore.map(item => `
+          <div class="card">
+            <div style="font-size: 1.5rem;">${item.icon}</div>
+            <div><b>${item.name}</b></div>
+            <div><span class="pill">${item.category}</span> <span class="pill">${item.price_band}</span></div>
+            <button class="btn success small" onclick="addFromExplore('${item.name}', '${item.icon}', '${item.category}', '${item.price_band}')">Add</button>
+          </div>
+        `).join('');
+      } catch (e) {
+        showNotification("Load failed", "error");
+      }
+    }
+
+    async function addFromExplore(name, icon, category, price_band) {
+      try {
+        const res = await fetch(`${API}/api/wardrobe`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ name, icon, category, price_band, color: 'neutral' })
+        });
+        if (res.ok) {
+          showNotification(`${icon} Added!`);
+          if (currentTab === 'wardrobe') await loadWardrobe();
+        }
+      } catch (e) {
+        showNotification("Add failed", "error");
+      }
+    }
+
+    async function searchShops() {
+      try {
+        const params = new URLSearchParams({
+          region: document.getElementById("shop-region").value,
+          category: document.getElementById("shop-category").value
+        });
+        const res = await fetch(`${API}/api/shops/search?${params}`);
+        const data = await res.json();
+        
+        document.getElementById("shop-results").innerHTML = data.results.map(p => `
+          <div class="card">
+            <div style="font-size: 1.5rem;">${p.icon}</div>
+            <div><b>${p.name}</b></div>
+            <div class="muted">${p.merchant}</div>
+            <div><span class="pill">${p.category}</span> <span class="pill">${p.price_band}</span></div>
+            <button class="btn success small" onclick="shopAdd('${p.name}', '${p.icon}', '${p.category}', '${p.price_band}')">Add</button>
+          </div>
+        `).join('');
+      } catch (e) {
+        showNotification("Search failed", "error");
+      }
+    }
+
+    async function shopAdd(name, icon, category, price_band) {
+      try {
+        await fetch(`${API}/api/shops/add-to-wardrobe`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ name, icon, category, price_band })
+        });
+        showNotification(`${icon} Added from shop!`);
+      } catch (e) {
+        showNotification("Add failed", "error");
+      }
+    }
+
+    async function loadPosts() {
+      try {
+        const res = await fetch(`${API}/api/posts`);
+        const data = await res.json();
+        
+        document.getElementById("for-you-list").innerHTML = data.posts.map(post => `
+          <div class="card">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <div style="width: 30px; height: 30px; border-radius: 50%; background: #6366f1; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; font-weight: bold;">
+                ${post.user.charAt(0)}
+              </div>
+              <b>${post.user}</b>
+            </div>
+            <div style="margin: 0.5rem 0;">${post.outfit}</div>
+            <div class="muted">⭐ ${post.stars || 0} • ❤️ ${post.likes || 0} • 💬 ${post.comments?.length || 0}</div>
+            <div style="display: flex; gap: 0.4rem; margin-top: 0.5rem;">
+              <button class="btn small" onclick="likePost(${post.id})">❤️</button>
+              <button class="btn small secondary" onclick="ratePost(${post.id}, 5)">⭐</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        showNotification("Load failed", "error");
+      }
+    }
+
+    async function addPost() {
+      const user = document.getElementById("username").value.trim() || "User";
+      const outfit = document.getElementById("outfit-desc").value.trim();
+      if (!outfit) return showNotification("Describe your outfit", "error");
+      
+      try {
+        await fetch(`${API}/api/posts`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ user, outfit })
+        });
+        document.getElementById("outfit-desc").value = "";
+        showNotification("Posted! 📸");
+        await loadPosts();
+      } catch (e) {
+        showNotification("Post failed", "error");
+      }
+    }
+
+    async function likePost(id) {
+      try {
+        await fetch(`${API}/api/posts/${id}/like`, { method: "POST" });
+        showNotification("Liked! ❤️");
+        await loadPosts();
+      } catch (e) {
+        showNotification("Like failed", "error");
+      }
+    }
+
+    async function ratePost(id, stars) {
+      try {
+        await fetch(`${API}/api/posts/${id}/rate`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({ stars })
+        });
+        showNotification(`${stars}⭐`);
+        await loadPosts();
+      } catch (e) {
+        showNotification("Rate failed", "error");
+      }
+    }
+
+    // Quick utilities
+    async function exportWardrobe() {
+      try {
+        const res = await fetch(`${API}/api/export/wardrobe`);
+        const data = await res.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `wardrobe-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotification("Exported! 📋");
+      } catch (e) {
+        showNotification("Export failed", "error");
+      }
+    }
+
+    async function clearWardrobe() {
+      if (!confirm("Clear all items?")) return;
+      try {
+        const res = await fetch(`${API}/api/wardrobe`);
+        const data = await res.json();
+        await Promise.all(data.wardrobe.map(item => fetch(`${API}/api/wardrobe/${item.id}`, { method: "DELETE" })));
+        showNotification("Cleared");
+        await loadWardrobe();
+      } catch (e) {
+        showNotification("Clear failed", "error");
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        if (e.target.id === 'item-name') addWardrobe();
+        if (e.target.id === 'outfit-desc') addPost();
+      }
+    });
+
+    // Initialize
+    async function init() {
+      await loadProfile();
+      await loadWardrobe();
+      showNotification("Welcome! 👋");
+    }
+    
+    init();
+  </script>
+</body>
+</html>
